@@ -14,11 +14,21 @@ export function AboutPage() {
       />
 
       {/* big atmospheric image */}
-      <section style={{ paddingTop: 40 }}>
+      <section style={{ paddingTop: 24 }}>
         <div className="container">
           <Reveal scale>
-            <Parallax src={IMG('1486325212027-8081e485255e', 2000)} height="68vh" style={{ borderRadius: 18 }}>
-              <div style={{ position: 'absolute', left: 28, bottom: 24, color: '#fff', fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+            <Parallax src={IMG('1486325212027-8081e485255e', 2000)} height="clamp(320px, 60vh, 640px)" style={{ borderRadius: 18 }}>
+              <div style={{
+                position: 'absolute',
+                left: 'clamp(16px, 3vw, 28px)',
+                right: 'clamp(16px, 3vw, 28px)',
+                bottom: 'clamp(16px, 3vw, 24px)',
+                color: '#fff',
+                fontFamily: 'var(--mono)',
+                fontSize: 11,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+              }}>
                 Karaköy Loft No.7 / Restorasyon kazısı, 2022
               </div>
             </Parallax>
@@ -29,7 +39,7 @@ export function AboutPage() {
       {/* vision / mission */}
       <section className="section">
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 60 }}>
+          <div className="grid-3-wide">
             {[
               { tag: 'Vizyon', t: 'Yarının şehirlerinde de iz bırakan, kalıcı yapılar inşa etmek.' },
               { tag: 'Misyon', t: 'Estetik, mühendislik ve zaman disiplinini uzlaşmaz biçimde bir araya getirmek.' },
@@ -38,7 +48,7 @@ export function AboutPage() {
               <Reveal key={v.tag} delay={i * 150}>
                 <div style={{ borderTop: '1px solid var(--line)', paddingTop: 28 }}>
                   <div className="eyebrow" style={{ marginBottom: 18 }}>{v.tag}</div>
-                  <h3 style={{ fontSize: 'clamp(24px, 2.6vw, 36px)', lineHeight: 1.2 }}>{v.t}</h3>
+                  <h3 style={{ fontSize: 'clamp(22px, 2.4vw, 34px)', lineHeight: 1.22 }}>{v.t}</h3>
                 </div>
               </Reveal>
             ))}
@@ -53,23 +63,31 @@ export function AboutPage() {
       <section className="section" style={{ background: 'var(--bg-soft)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
         <div className="container">
           <Reveal>
-            <div className="eyebrow" style={{ marginBottom: 36 }}><span className="num">04</span>Yönetim</div>
+            <div className="eyebrow" style={{ marginBottom: 32 }}><span className="num">04</span>Yönetim</div>
           </Reveal>
           <Reveal delay={150}>
-            <h2 className="display" style={{ fontSize: 'clamp(32px, 4.6vw, 72px)', maxWidth: 1100 }}>
+            <h2 className="display" style={{ fontSize: 'clamp(30px, 4.4vw, 68px)', maxWidth: 1080 }}>
               <MaskLines lines={["Ortalama 22 yıllık deneyime", "sahip 12 kişilik bir yönetim."]} />
             </h2>
           </Reveal>
-          <div style={{ marginTop: 64, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 32 }}>
+          <div className="grid-4" style={{ marginTop: 56 }}>
             {[
-              { n: 'Mehmet Doğan',    r: 'Kurucu / Yönetim Kurulu Başkanı' },
-              { n: 'Defne Aksu',     r: 'CEO' },
-              { n: 'Tolga Yıldırım', r: 'Tasarım Direktörü' },
-              { n: 'Selin Erkan',     r: 'Sürdürülebilirlik Direktörü' },
+              { n: 'Mehmet Doğan',    r: 'Kurucu / Yönetim Kurulu Başkanı', img: '1568602471122-7832951cc4c5' },
+              { n: 'Defne Aksu',      r: 'CEO',                             img: '1494790108377-be9c29b29330' },
+              { n: 'Tolga Yıldırım',  r: 'Tasarım Direktörü',               img: '1500648767791-00dcc994a43e' },
+              { n: 'Selin Erkan',     r: 'Sürdürülebilirlik Direktörü',     img: '1573496359142-b8d87734a5a2' },
             ].map((p, i) => (
               <Reveal key={p.n} delay={i * 100}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <div style={{ aspectRatio: '4/5', background: `url(${IMG(['1568602471122-7832951cc4c5','1494790108377-be9c29b29330','1500648767791-00dcc994a43e','1573496359142-b8d87734a5a2'][i])}) center/cover`, borderRadius: 10, marginBottom: 14, filter: 'grayscale(1) contrast(1.05)' }} />
+                  <div style={{
+                    aspectRatio: '4/5',
+                    backgroundImage: `url(${IMG(p.img, 900)})`,
+                    backgroundPosition: 'center 20%',
+                    backgroundSize: 'cover',
+                    borderRadius: 10,
+                    marginBottom: 14,
+                    filter: 'grayscale(1) contrast(1.05)',
+                  }} />
                   <div style={{ fontFamily: 'var(--serif)', fontSize: 24 }}>{p.n}</div>
                   <div style={{ color: 'var(--text-dim)', fontFamily: 'var(--mono)', fontSize: 11.5, letterSpacing: '0.06em' }}>{p.r}</div>
                 </div>
@@ -89,18 +107,16 @@ function Timeline() {
         <Reveal>
           <div className="eyebrow" style={{ marginBottom: 48 }}><span className="num">03</span>Zaman Çizelgesi</div>
         </Reveal>
-        <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', left: 'clamp(80px, 12vw, 180px)', top: 0, bottom: 0, width: 1, background: 'var(--line)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 64 }}>
+        <div className="timeline-wrap">
+          <div className="timeline-line" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(44px, 6vw, 64px)' }}>
             {TIMELINE.map((e, i) => (
               <Reveal key={e.year} delay={i * 120}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'clamp(80px, 12vw, 180px) 1fr', gap: 'clamp(24px, 5vw, 80px)', alignItems: 'flex-start' }}>
-                  <div style={{ position: 'relative', paddingRight: 24 }}>
-                    <div style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(36px, 4.5vw, 64px)', color: 'var(--accent)', letterSpacing: '-0.02em' }}>{e.year}</div>
-                  </div>
-                  <div style={{ position: 'relative', paddingLeft: 32 }}>
-                    <span style={{ position: 'absolute', left: -7, top: 18, width: 14, height: 14, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 0 6px var(--bg)' }} />
-                    <h3 style={{ fontSize: 'clamp(24px, 2.4vw, 32px)', marginBottom: 12 }}>{e.title}</h3>
+                <div className="timeline-row">
+                  <div className="timeline-year">{e.year}</div>
+                  <div className="timeline-body">
+                    <span className="timeline-dot" />
+                    <h3 style={{ fontSize: 'clamp(22px, 2.4vw, 32px)', marginBottom: 10 }}>{e.title}</h3>
                     <p style={{ color: 'var(--text-dim)', fontSize: 16, lineHeight: 1.65, maxWidth: 640 }}>{e.text}</p>
                   </div>
                 </div>

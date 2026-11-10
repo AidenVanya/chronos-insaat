@@ -43,7 +43,7 @@ export const PROJECTS = [
     img: IMG('1496307653780-42ee777d4833'), area: '54.000 m²', floors: 6, units: 0,
     note: 'Teknopark kampüsü — yedi blok arasında yarı kapalı bir avlu sistemi.' },
   { id: 'p8', name: 'Ankara Civic Plaza',  loc: 'Ankara',    year: 2026, status: 'devam-eden', type: 'ticari',
-    img: IMG('1518709268805-4e9042af2176'), area: '92.000 m²', floors: 12, units: 0,
+    img: IMG('1479839672679-a46483c0e7c8'), area: '92.000 m²', floors: 12, units: 0,
     note: 'Kamu hizmet binası — ışık ve şeffaflığı temel ilke alan bir tasarım.' },
   { id: 'p9', name: 'Fikirtepe Yeni Mahalle', loc: 'İstanbul', year: 2023, status: 'tamamlanan', type: 'donusum',
     img: IMG('1564540583246-934409427776'), area: '215.000 m²', floors: 16, units: 980,

@@ -25,32 +25,38 @@ export function ProjectsPage() {
         title={["10 proje, dört şehir,", "ortak bir disiplin."]}
         intro="142 tamamlanmış ve 28 devam eden projeden bir seçki. Filtrelerle bölge, tip veya statüye göre keşfedin." />
 
-      <section style={{ padding: '40px 0' }}>
+      <section style={{ padding: '24px 0 40px' }}>
         <div className="container">
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: '20px 0' }}>
-            <span className="label-mono" style={{ marginRight: 16 }}>Filtre /</span>
-            {filters.map(f => (
-              <button key={f.id} onClick={() => setFilter(f.id)}
-                style={{
-                  padding: '8px 16px', borderRadius: 100, border: '1px solid var(--line)',
-                  background: filter === f.id ? 'var(--accent)' : 'transparent',
-                  color: filter === f.id ? 'var(--accent-ink)' : 'var(--text-dim)',
-                  cursor: 'pointer', fontSize: 13, fontFamily: 'var(--sans)', letterSpacing: '0.01em',
-                  transition: 'all .35s var(--ease-out)',
-                }}>
-                {f.label}
-              </button>
-            ))}
-            <span style={{ marginLeft: 'auto', color: 'var(--text-faint)', fontFamily: 'var(--mono)', fontSize: 11.5, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+          <div style={{
+            display: 'flex', gap: '12px 16px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between',
+            borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: '20px 0',
+          }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span className="label-mono" style={{ marginRight: 8 }}>Filtre /</span>
+              {filters.map(f => (
+                <button key={f.id} onClick={() => setFilter(f.id)}
+                  style={{
+                    padding: '8px 16px', borderRadius: 100,
+                    border: `1px solid ${filter === f.id ? 'var(--accent)' : 'var(--line)'}`,
+                    background: filter === f.id ? 'var(--accent)' : 'transparent',
+                    color: filter === f.id ? 'var(--accent-ink)' : 'var(--text-dim)',
+                    cursor: 'pointer', fontSize: 13, fontFamily: 'var(--sans)', letterSpacing: '0.01em',
+                    transition: 'all .35s var(--ease-out)',
+                  }}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <span style={{ color: 'var(--text-faint)', fontFamily: 'var(--mono)', fontSize: 11.5, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
               {String(list.length).padStart(2, '0')} proje
             </span>
           </div>
         </div>
       </section>
 
-      <section style={{ paddingBottom: 120 }}>
+      <section style={{ paddingBottom: 'clamp(72px, 10vw, 120px)' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: 24 }}>
+          <div className="projects-grid">
             {list.map((p, i) => (
               <Reveal key={p.id} delay={Math.min(i * 60, 480)}>
                 <ProjectCard p={p} />

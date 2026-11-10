@@ -14,19 +14,16 @@ export function HomePage() {
     return () => clearInterval(id);
   }, []);
 
-  /* hero scroll parallax — title moves slower than image */
+  /* subtle background image parallax — clamped so it never shifts out of bounds */
   const heroRef = useRef(null);
-  const titleRef = useRef(null);
   useEffect(() => {
     const onScroll = () => {
-      const y = window.scrollY;
-      if (titleRef.current) {
-        titleRef.current.style.transform = `translate3d(0, ${y * 0.18}px, 0)`;
-      }
-      if (heroRef.current) {
-        const img = heroRef.current.querySelector('.hero-image-wrap');
-        if (img) img.style.transform = `translate3d(0, ${y * 0.32}px, 0)`;
-      }
+      if (!heroRef.current) return;
+      const img = heroRef.current.querySelector('.hero-image-wrap');
+      if (!img) return;
+      const maxOffset = heroRef.current.offsetHeight * 0.08;
+      const offset = Math.min(maxOffset, Math.max(0, window.scrollY * 0.14));
+      img.style.transform = `translate3d(0, ${offset}px, 0)`;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -50,19 +47,24 @@ export function HomePage() {
         </div>
 
         {/* hero content */}
-        <div className="container" style={{ position: 'relative', zIndex: 2, paddingTop: 'clamp(140px, 22vh, 220px)', paddingBottom: 80, flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div className="eyebrow" style={{ marginBottom: 36, color: 'rgba(255,255,255,0.7)' }}>
+        <div className="container" style={{
+          position: 'relative', zIndex: 2,
+          paddingTop: 'clamp(116px, 16vh, 180px)',
+          paddingBottom: 'clamp(88px, 12vh, 120px)',
+          flex: 1, display: 'flex', flexDirection: 'column', gap: 28,
+        }}>
+          <div className="eyebrow" style={{ color: 'rgba(255,255,255,0.75)' }}>
             <span className="num">01</span>EST. 1987 / İSTANBUL — ANKARA — İZMİR
           </div>
 
-          <div ref={titleRef}>
-            <h1 className="display" style={{ fontSize: 'clamp(56px, 11vw, 184px)', color: '#fff' }}>
+          <div>
+            <h1 className="display" style={{ fontSize: 'clamp(44px, 8.8vw, 140px)', color: '#fff' }}>
               <MaskLines lines={["Zamana", "dayanan", "yapılar."]} step={180} />
             </h1>
           </div>
 
-          <Reveal delay={1000} style={{ maxWidth: 460, marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
-            <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 16.5, lineHeight: 1.65 }}>
+          <Reveal delay={900} style={{ maxWidth: 480, marginTop: 'auto', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 28 }}>
+            <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: 'clamp(15.5px, 1.5vw, 17px)', lineHeight: 1.65 }}>
               Konut, ticari ve kentsel dönüşümde 38 yıllık disiplin. İstanbul başta olmak üzere 16 şehirde 142 proje teslim ettik — söz verdiğimiz tarihte, söz verdiğimiz kalitede.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -70,7 +72,7 @@ export function HomePage() {
                 Projeleri gör
                 <span className="btn-arrow">→</span>
               </button>
-              <button className="btn" onClick={() => go('/iletisim')} style={{ borderColor: 'rgba(255,255,255,0.25)', color: '#fff' }}>
+              <button className="btn" onClick={() => go('/iletisim')} style={{ borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}>
                 Bizimle çalışın
                 <span className="btn-arrow">→</span>
               </button>
@@ -79,20 +81,15 @@ export function HomePage() {
         </div>
 
         {/* hero footer strip — current project marker + scroll hint */}
-        <div style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 2,
-          borderTop: '1px solid rgba(255,255,255,0.15)',
-          background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 100%)',
-          padding: '18px var(--gutter)',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, color: '#fff',
-          fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase',
-        }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ width: 24, height: 1, background: 'var(--accent)' }}></span>
-            {String(slide + 1).padStart(2, '0')} / {String(HERO_SLIDES.length).padStart(2, '0')} —&nbsp;
-            <span style={{ color: 'rgba(255,255,255,0.95)' }}>{HERO_SLIDES[slide].label}</span>
+        <div className="hero-strip">
+          <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+            <span style={{ width: 24, height: 1, background: 'var(--accent)', flexShrink: 0 }}></span>
+            <span>
+              {String(slide + 1).padStart(2, '0')} / {String(HERO_SLIDES.length).padStart(2, '0')} —{' '}
+              <span style={{ color: 'rgba(255,255,255,0.95)' }}>{HERO_SLIDES[slide].label}</span>
+            </span>
           </span>
-          <span style={{ display: 'flex', gap: 8 }}>
+          <span style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             {HERO_SLIDES.map((_, i) => (
               <button key={i}
                 aria-label={`Slayt ${i + 1}`}
@@ -108,13 +105,13 @@ export function HomePage() {
       </section>
 
       {/* ── MARQUEE ── */}
-      <div style={{ borderBottom: '1px solid var(--line)', borderTop: '1px solid var(--line)', padding: '28px 0', background: 'var(--bg-soft)' }}>
+      <div style={{ borderBottom: '1px solid var(--line)', borderTop: '1px solid var(--line)', padding: '26px 0', background: 'var(--bg-soft)' }}>
         <div className="marquee">
           <div className="marquee-track">
             {[...PROJECTS, ...PROJECTS].map((p, i) => (
-              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 28, fontFamily: 'var(--serif)', fontSize: 'clamp(28px, 4vw, 48px)', color: 'var(--text)' }}>
+              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 28, fontFamily: 'var(--serif)', fontSize: 'clamp(26px, 3.8vw, 46px)', color: 'var(--text)' }}>
                 <span>{p.name}</span>
-                <span style={{ color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 14, letterSpacing: '0.16em' }}>{p.year}</span>
+                <span style={{ color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 13, letterSpacing: '0.16em' }}>{p.year}</span>
               </span>
             ))}
           </div>
@@ -125,15 +122,15 @@ export function HomePage() {
       <section className="section">
         <div className="container">
           <Reveal>
-            <div className="eyebrow" style={{ marginBottom: 28 }}><span className="num">02</span>Felsefemiz</div>
+            <div className="eyebrow" style={{ marginBottom: 24 }}><span className="num">02</span>Felsefemiz</div>
           </Reveal>
-          <h2 className="display" style={{ fontSize: 'clamp(34px, 5.2vw, 88px)', marginBottom: 56, maxWidth: 1100 }}>
+          <h2 className="display" style={{ fontSize: 'clamp(32px, 5vw, 84px)', marginBottom: 56, maxWidth: 1100 }}>
             <MaskLines lines={["İnşaat;", "zamana, malzemeye ve", "insana verilen sözdür."]} step={120} />
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 36 }}>
+          <div className="grid-4">
             {VALUES.map((v, i) => (
               <Reveal key={v.num} delay={i * 120}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, borderTop: '1px solid var(--line)', paddingTop: 24 }}>
                   <span className="label-mono" style={{ color: 'var(--accent)' }}>{v.num}</span>
                   <h3 style={{ fontSize: 22, lineHeight: 1.2 }}>{v.title}</h3>
                   <p style={{ color: 'var(--text-dim)', fontSize: 14.5, lineHeight: 1.6 }}>{v.text}</p>
@@ -155,12 +152,12 @@ export function HomePage() {
           <Reveal>
             <div className="eyebrow" style={{ marginBottom: 48 }}><span className="num">04</span>Sayılarla Chronos</div>
           </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 32, alignItems: 'end' }}>
+          <div className="grid-4" style={{ alignItems: 'start' }}>
             {STATS.map((s, i) => (
               <Reveal key={i} delay={i * 120}>
                 <div style={{ borderTop: '1px solid var(--line)', paddingTop: 24 }}>
                   <CountUp to={s.num} decimals={s.decimals || 0} suffix={s.suffix} />
-                  <div style={{ marginTop: 16, color: 'var(--text-dim)', fontSize: 14, letterSpacing: 0.2 }}>{s.label}</div>
+                  <div style={{ marginTop: 14, color: 'var(--text-dim)', fontSize: 14, letterSpacing: '0.02em' }}>{s.label}</div>
                 </div>
               </Reveal>
             ))}
@@ -183,11 +180,11 @@ function FeaturedProjects() {
   return (
     <section className="section">
       <div className="container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 40, flexWrap: 'wrap', marginBottom: 56 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 28, flexWrap: 'wrap', marginBottom: 48 }}>
           <Reveal>
             <div>
               <div className="eyebrow" style={{ marginBottom: 18 }}><span className="num">03</span>Öne çıkan projeler</div>
-              <h2 className="display" style={{ fontSize: 'clamp(36px, 5vw, 80px)' }}>
+              <h2 className="display" style={{ fontSize: 'clamp(34px, 5vw, 78px)' }}>
                 <MaskLines lines={["İz bırakan", "yapılar."]} />
               </h2>
             </div>
@@ -200,12 +197,15 @@ function FeaturedProjects() {
           </Reveal>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: 24 }}>
-          {featured.map((p, i) => (
-            <Reveal key={p.id} delay={i * 80}>
-              <ProjectCard p={p} large={i === 0} />
-            </Reveal>
-          ))}
+        <div className="projects-grid">
+          {featured.map((p, i) => {
+            const isLarge = i === 0 || i === 5;
+            return (
+              <Reveal key={p.id} delay={i * 80} className={isLarge ? 'proj-span-full' : ''}>
+                <ProjectCard p={p} large={isLarge} />
+              </Reveal>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -219,25 +219,27 @@ function TestimonialsSlider() {
     <section className="section">
       <div className="container">
         <Reveal>
-          <div className="eyebrow" style={{ marginBottom: 56 }}><span className="num">05</span>Müşterilerimizden</div>
+          <div className="eyebrow" style={{ marginBottom: 48 }}><span className="num">05</span>Müşterilerimizden</div>
         </Reveal>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 40 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 36 }}>
           <div key={idx} style={{ animation: 'fadeQuote .7s var(--ease-out)' }}>
-            <blockquote className="display" style={{ fontSize: 'clamp(28px, 4vw, 56px)', lineHeight: 1.15, margin: 0, maxWidth: 1100 }}>
+            <blockquote className="display" style={{ fontSize: 'clamp(24px, 3.8vw, 52px)', lineHeight: 1.2, margin: 0, maxWidth: 1080 }}>
               {t.quote}
             </blockquote>
-            <div style={{ marginTop: 40, display: 'flex', alignItems: 'center', gap: 18 }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--surface-2)', border: '1px solid var(--line)',
-                display: 'grid', placeItems: 'center', fontFamily: 'var(--serif)', fontSize: 22, color: 'var(--accent)' }}>
+            <div style={{ marginTop: 36, display: 'flex', alignItems: 'center', gap: 18 }}>
+              <div style={{
+                width: 54, height: 54, borderRadius: '50%', background: 'var(--surface-2)', border: '1px solid var(--line)',
+                display: 'grid', placeItems: 'center', fontFamily: 'var(--serif)', fontSize: 20, color: 'var(--accent)', flexShrink: 0,
+              }}>
                 {t.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
               </div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 500 }}>{t.name}</div>
-                <div style={{ color: 'var(--text-dim)', fontSize: 13, fontFamily: 'var(--mono)', letterSpacing: '0.06em' }}>{t.role}</div>
+                <div style={{ color: 'var(--text-dim)', fontSize: 13, fontFamily: 'var(--mono)', letterSpacing: '0.06em', marginTop: 2 }}>{t.role}</div>
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, marginTop: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, marginTop: 8 }}>
             <div style={{ display: 'flex', gap: 6 }}>
               {TESTIMONIALS.map((_, i) => (
                 <button key={i} aria-label={`Yorum ${i + 1}`}
@@ -257,9 +259,7 @@ function TestimonialsSlider() {
         </div>
       </div>
       <style>{`
-        @keyframes fadeQuote { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
-        .nav-arrow { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--text); cursor: pointer; transition: background .3s, color .3s, border-color .3s; }
-        .nav-arrow:hover { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+        @keyframes fadeQuote { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: translateY(0) } }
       `}</style>
     </section>
   );
@@ -273,17 +273,17 @@ function CtaBlock() {
         <Reveal scale>
           <div style={{
             position: 'relative', overflow: 'hidden', borderRadius: 18,
-            padding: 'clamp(48px, 8vw, 120px) clamp(32px, 6vw, 100px)',
-            background: `linear-gradient(180deg, rgba(14,16,19,0.4), rgba(14,16,19,0.8)), url(${IMG('1503387762-592deb58ef4e', 1600)})`,
+            padding: 'clamp(40px, 7.5vw, 110px) clamp(24px, 5.5vw, 92px)',
+            background: `linear-gradient(180deg, rgba(14,16,19,0.45), rgba(14,16,19,0.85)), url(${IMG('1503387762-592deb58ef4e', 1600)})`,
             backgroundSize: 'cover', backgroundPosition: 'center',
           }}>
-            <div className="eyebrow" style={{ color: 'rgba(255,255,255,0.6)', marginBottom: 28 }}>
+            <div className="eyebrow" style={{ color: 'rgba(255,255,255,0.68)', marginBottom: 24 }}>
               <span className="num" style={{ color: 'var(--accent)' }}>06</span>Birlikte inşa edelim
             </div>
-            <h2 className="display" style={{ fontSize: 'clamp(40px, 6.5vw, 120px)', color: '#fff', maxWidth: 1200 }}>
+            <h2 className="display" style={{ fontSize: 'clamp(34px, 6vw, 108px)', color: '#fff', maxWidth: 1100 }}>
               <MaskLines lines={["Bir sonraki", "kalıcı yapı,", "sizinki olsun."]} />
             </h2>
-            <div style={{ marginTop: 48, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ marginTop: 40, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
               <button className="btn btn-primary" onClick={() => go('/iletisim')}>Görüşme planla<span className="btn-arrow">→</span></button>
               <button className="btn" onClick={() => go('/hizmetler')} style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.3)' }}>Hizmetlerimiz<span className="btn-arrow">→</span></button>
             </div>

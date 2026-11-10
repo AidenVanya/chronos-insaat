@@ -26,36 +26,36 @@ export function ContactPage() {
         intro="Yatırımcı, mimar, paydaş, gazeteci — kim olursanız olun, bir Chronos çalışanı 48 saat içinde size geri döner."
       />
 
-      <section className="section" style={{ paddingTop: 40 }}>
+      <section className="section" style={{ paddingTop: 24 }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.2fr)', gap: 'clamp(40px, 6vw, 80px)', alignItems: 'flex-start' }}>
+          <div className="split-grid">
             {/* contact info */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
               {[
-                { ico: 'map', t: 'Genel Merkez', l1: 'Büyükdere Cd. No:209', l2: 'Levent / İstanbul 34394' },
-                { ico: 'phone', t: 'Telefon', l1: '+90 212 999 14 87', l2: 'Hafta içi 09:00 — 18:30' },
-                { ico: 'mail', t: 'E-posta', l1: 'info@chronosinsaat.com.tr', l2: 'basin@chronosinsaat.com.tr' },
+                { ico: 'map',   t: 'Genel Merkez', l1: 'Büyükdere Cd. No:209',       l2: 'Levent / İstanbul 34394' },
+                { ico: 'phone', t: 'Telefon',      l1: '+90 212 999 14 87',          l2: 'Hafta içi 09:00 — 18:30' },
+                { ico: 'mail',  t: 'E-posta',      l1: 'info@chronosinsaat.com.tr',  l2: 'basin@chronosinsaat.com.tr' },
               ].map((c, i) => (
                 <Reveal key={c.t} delay={i * 100}>
-                  <div style={{ display: 'flex', gap: 20, paddingBottom: 28, borderBottom: '1px solid var(--line)' }}>
+                  <div style={{ display: 'flex', gap: 18, paddingBottom: 26, borderBottom: '1px solid var(--line)', minWidth: 0 }}>
                     <div className="ico" style={{ width: 48, height: 48, borderRadius: 12, border: '1px solid var(--line)', display: 'grid', placeItems: 'center', color: 'var(--accent)', flexShrink: 0 }}>
                       <Icon name={c.ico} size={22} />
                     </div>
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <div className="label-mono" style={{ marginBottom: 8 }}>{c.t}</div>
-                      <div style={{ fontSize: 18, marginBottom: 4 }}>{c.l1}</div>
-                      <div style={{ color: 'var(--text-dim)', fontSize: 14 }}>{c.l2}</div>
+                      <div style={{ fontSize: 'clamp(16px, 1.8vw, 18px)', marginBottom: 4, overflowWrap: 'anywhere' }}>{c.l1}</div>
+                      <div style={{ color: 'var(--text-dim)', fontSize: 14, overflowWrap: 'anywhere' }}>{c.l2}</div>
                     </div>
                   </div>
                 </Reveal>
               ))}
               <Reveal delay={400}>
-                <div style={{ paddingTop: 12 }}>
-                  <div className="label-mono" style={{ marginBottom: 12 }}>Diğer ofisler</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                <div style={{ paddingTop: 8 }}>
+                  <div className="label-mono" style={{ marginBottom: 14 }}>Diğer ofisler</div>
+                  <div className="offices-grid">
                     {[
                       { c: 'Ankara', a: 'Bilkent Plaza A2' },
-                      { c: 'İzmir', a: 'Alsancak No:88' },
+                      { c: 'İzmir',  a: 'Alsancak No:88' },
                       { c: 'Bodrum', a: 'Yalıkavak Şantiyesi' },
                     ].map(o => (
                       <div key={o.c}>
@@ -71,7 +71,7 @@ export function ContactPage() {
             {/* form */}
             <Reveal delay={200}>
               {sent ? (
-                <div className="surface" style={{ padding: 56, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+                <div className="surface" style={{ padding: 'clamp(36px, 5vw, 56px)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
                   <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--accent)', display: 'grid', placeItems: 'center', color: 'var(--accent-ink)' }}>
                     <Icon name="check" size={26} />
                   </div>
@@ -79,7 +79,7 @@ export function ContactPage() {
                   <p style={{ color: 'var(--text-dim)', maxWidth: 420 }}>48 saat içinde size geri dönüş yapacağız.</p>
                 </div>
               ) : (
-                <form onSubmit={submit} className="surface" style={{ padding: 'clamp(28px, 4vw, 48px)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+                <form onSubmit={submit} className="surface form-grid" style={{ padding: 'clamp(24px, 4vw, 48px)' }}>
                   <div className={`field ${errors.name ? 'error' : ''}`}>
                     <label>Ad Soyad</label>
                     <input className="input" value={form.name} onChange={e => set('name', e.target.value)} />
@@ -96,7 +96,7 @@ export function ContactPage() {
                   </div>
                   <div className="field">
                     <label>Konu</label>
-                    <select className="select input" value={form.subject} onChange={e => set('subject', e.target.value)} style={{ background: 'transparent', appearance: 'none' }}>
+                    <select className="select input" value={form.subject} onChange={e => set('subject', e.target.value)}>
                       <option value="" style={{ background: 'var(--surface)' }}>Seçiniz</option>
                       <option style={{ background: 'var(--surface)' }}>Yeni proje görüşmesi</option>
                       <option style={{ background: 'var(--surface)' }}>Yatırım fırsatı</option>
@@ -105,12 +105,12 @@ export function ContactPage() {
                       <option style={{ background: 'var(--surface)' }}>Diğer</option>
                     </select>
                   </div>
-                  <div className={`field ${errors.message ? 'error' : ''}`} style={{ gridColumn: 'span 2' }}>
+                  <div className={`field field-full ${errors.message ? 'error' : ''}`}>
                     <label>Mesajınız</label>
                     <textarea className="textarea" rows={6} value={form.message} onChange={e => set('message', e.target.value)} />
                     {errors.message && <span className="field-error">{errors.message}</span>}
                   </div>
-                  <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                  <div className="field-full" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
                     <span className="label-mono" style={{ color: 'var(--text-faint)' }}>KVKK kapsamında saklanır</span>
                     <button className="btn btn-primary" type="submit">Mesajı gönder<span className="btn-arrow">→</span></button>
                   </div>
@@ -134,12 +134,23 @@ export function ContactPage() {
 }
 
 function DarkMap() {
+  const [zoom, setZoom] = useState(1);
+
   return (
     <div style={{
       position: 'relative', overflow: 'hidden', borderRadius: 14, border: '1px solid var(--line)',
-      background: 'var(--bg-soft)', height: 'clamp(360px, 50vw, 540px)',
+      background: 'var(--bg-soft)', height: 'clamp(320px, 48vw, 520px)',
     }}>
-      <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+      <svg
+        viewBox="0 0 800 500"
+        preserveAspectRatio="xMidYMid slice"
+        style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%',
+          transform: `scale(${zoom})`,
+          transformOrigin: '29% 41%',
+          transition: 'transform .45s var(--ease-out)',
+        }}
+      >
         <defs>
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
             <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--line-soft)" strokeWidth="1" />
@@ -166,31 +177,36 @@ function DarkMap() {
         {/* district names */}
         {[
           { x: 180, y: 100, t: 'MASLAK' },
-          { x: 230, y: 220, t: 'LEVENT' },
+          { x: 230, y: 245, t: 'LEVENT' },
           { x: 260, y: 320, t: 'BEŞİKTAŞ' },
           { x: 620, y: 240, t: 'ÜSKÜDAR' },
           { x: 660, y: 360, t: 'KADIKÖY' },
         ].map((d, i) => (
-          <text key={i} x={d.x} y={d.y} fill="var(--text-faint)" fontFamily="JetBrains Mono" fontSize="10" letterSpacing="2">{d.t}</text>
+          <text key={i} x={d.x} y={d.y} fill="var(--text-faint)" fontFamily="JetBrains Mono, monospace" fontSize="10" letterSpacing="2">{d.t}</text>
         ))}
         {/* Chronos HQ marker */}
         <g transform="translate(232,205)">
           <circle r="36" fill="var(--accent)" opacity="0.12" />
-          <circle r="22" fill="var(--accent)" opacity="0.22" style={{ animation: 'pulse2 2.4s ease-out infinite' }} />
+          <circle r="22" fill="var(--accent)" opacity="0.22" style={{ animation: 'pulse2 2.4s ease-out infinite', transformBox: 'fill-box', transformOrigin: 'center' }} />
           <circle r="8"  fill="var(--accent)" />
-          <text x="14" y="4" fill="var(--accent)" fontFamily="JetBrains Mono" fontSize="11" fontWeight="500">CHRONOS HQ</text>
+          <text x="14" y="4" fill="var(--accent)" fontFamily="JetBrains Mono, monospace" fontSize="11" fontWeight="500">CHRONOS HQ</text>
         </g>
       </svg>
 
-      <div style={{ position: 'absolute', left: 24, top: 24, display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)', padding: '8px 14px', borderRadius: 100, border: '1px solid var(--line)' }}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)' }} />
+      <div style={{
+        position: 'absolute', left: 'clamp(14px, 2.5vw, 24px)', top: 'clamp(14px, 2.5vw, 24px)',
+        display: 'flex', alignItems: 'center', gap: 10,
+        background: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+        padding: '8px 14px', borderRadius: 100, border: '1px solid var(--line)',
+      }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
         <span className="label-mono" style={{ color: 'var(--text)' }}>41.0789°N · 29.0124°E</span>
       </div>
-      <div style={{ position: 'absolute', right: 24, bottom: 24, display: 'flex', gap: 8 }}>
-        <button className="nav-arrow" aria-label="Yakınlaştır">+</button>
-        <button className="nav-arrow" aria-label="Uzaklaştır">−</button>
+      <div style={{ position: 'absolute', right: 'clamp(14px, 2.5vw, 24px)', bottom: 'clamp(14px, 2.5vw, 24px)', display: 'flex', gap: 8 }}>
+        <button type="button" className="nav-arrow" onClick={() => setZoom(z => Math.min(1.8, +(z + 0.25).toFixed(2)))} aria-label="Yakınlaştır">+</button>
+        <button type="button" className="nav-arrow" onClick={() => setZoom(z => Math.max(1, +(z - 0.25).toFixed(2)))} aria-label="Uzaklaştır">−</button>
       </div>
-      <style>{`@keyframes pulse2 { 0%{r:22;opacity:.45} 100%{r:50;opacity:0} }`}</style>
+      <style>{`@keyframes pulse2 { 0%{transform:scale(0.8);opacity:.5} 100%{transform:scale(2.2);opacity:0} }`}</style>
     </div>
   );
 }
