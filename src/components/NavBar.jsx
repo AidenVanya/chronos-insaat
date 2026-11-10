@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { ROUTES } from '../data.js';
 import { useRouter } from './Router.jsx';
+import { useSiteData } from '../context/SiteContext.jsx';
 import { BrandMark } from './BrandMark.jsx';
 
 export function NavBar() {
   const { path, go } = useRouter();
+  const { site } = useSiteData();
+  const settings = site.settings || {};
+
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -24,12 +28,12 @@ export function NavBar() {
 
   return (
     <>
-      <nav className={`nav ${scrolled ? 'scrolled' : ''}`}>
+      <nav className={`nav ${scrolled || path === '/panel' || path === '/admin' ? 'scrolled' : ''}`}>
         <div className="brand" onClick={() => handleGo('/')}>
           <BrandMark size={38} />
           <div className="brand-text">
-            <span className="b1">Chronos</span>
-            <span className="b2">İnşaat / EST.1987</span>
+            <span className="b1">{settings.brandName || 'Chronos'}</span>
+            <span className="b2">{settings.brandSub || 'İnşaat / EST.1987'}</span>
           </div>
         </div>
 
@@ -55,12 +59,12 @@ export function NavBar() {
         </button>
       </nav>
 
-      <MobileMenu open={mobileOpen} onGo={handleGo} onClose={() => setMobileOpen(false)} />
+      <MobileMenu open={mobileOpen} onGo={handleGo} onClose={() => setMobileOpen(false)} settings={settings} />
     </>
   );
 }
 
-function MobileMenu({ open, onGo, onClose }) {
+function MobileMenu({ open, onGo, onClose, settings }) {
   return (
     <div className={`mobile-menu ${open ? 'open' : ''}`}>
       <button className="mm-close" aria-label="Menüyü kapat" onClick={onClose}>
@@ -79,9 +83,9 @@ function MobileMenu({ open, onGo, onClose }) {
       ))}
       <div className="mm-foot" style={{ transitionDelay: open ? '900ms' : '0ms', opacity: open ? 1 : 0, transform: open ? 'translateY(0)' : 'translateY(20px)', transition: 'opacity .6s, transform .6s' }}>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>İletişim</span>
-        <span>+90 212 999 14 87</span>
-        <span>info@chronosinsaat.com.tr</span>
-        <span>Büyükdere Cd. No:209 Levent / İstanbul</span>
+        <span>{settings.phone || '+90 212 999 14 87'}</span>
+        <span>{settings.email || 'info@chronosinsaat.com.tr'}</span>
+        <span>{settings.addressLine1 || 'Büyükdere Cd. No:209'} {settings.addressLine2 || 'Levent / İstanbul'}</span>
       </div>
     </div>
   );

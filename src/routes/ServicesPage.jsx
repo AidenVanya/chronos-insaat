@@ -1,11 +1,15 @@
 import { Reveal, MaskLines } from '../components/animations.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { Icon } from '../components/Icon.jsx';
-import { SERVICES } from '../data.js';
+import { useSiteData } from '../context/SiteContext.jsx';
 import { useRouter } from '../components/Router.jsx';
 
 export function ServicesPage() {
   const { go } = useRouter();
+  const { site } = useSiteData();
+  const services = site.services || [];
+  const processSteps = site.processSteps || [];
+
   return (
     <main>
       <PageHeader num="04" eyebrow="Hizmetler"
@@ -16,8 +20,8 @@ export function ServicesPage() {
       <section className="section" style={{ paddingTop: 24 }}>
         <div className="container">
           <div className="grid-3">
-            {SERVICES.map((s, i) => (
-              <Reveal key={s.num} delay={i * 80} style={{ height: '100%' }}>
+            {services.map((s, i) => (
+              <Reveal key={s.id || s.num} delay={i * 80} style={{ height: '100%' }}>
                 <article
                   className="svc-card surface"
                   onClick={() => go('/iletisim')}
@@ -57,14 +61,8 @@ export function ServicesPage() {
             </h2>
           </Reveal>
           <div className="process-grid">
-            {[
-              { n: '01', t: 'Keşif', d: 'Yatırımcı ile bir araya gelir, ihtiyacı, parsel kısıtlarını ve hedefleri tanımlarız.' },
-              { n: '02', t: 'Konsept', d: 'Üç farklı mimari konsept ve ön maliyet senaryosu hazırlarız.' },
-              { n: '03', t: 'Uygulama Projesi', d: 'BIM ortamında tüm disiplinlerle koordineli bir LOD-400 model üretiriz.' },
-              { n: '04', t: 'İnşaat', d: 'Dijital ikiz destekli saha — haftalık raporlama ve canlı izleme.' },
-              { n: '05', t: 'Teslim & Bakım', d: '10 yıllık yapısal garanti, 2 yıllık tüm sistem bakımı.' },
-            ].map((step, i) => (
-              <Reveal key={step.n} delay={i * 80}>
+            {processSteps.map((step, i) => (
+              <Reveal key={step.id || step.n} delay={i * 80}>
                 <div className="bordered-cell" style={{ gap: 18 }}>
                   <span style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(42px, 4.5vw, 56px)', color: 'var(--accent)', letterSpacing: '-0.02em', lineHeight: 0.95 }}>{step.n}</span>
                   <h4 style={{ fontSize: 21 }}>{step.t}</h4>

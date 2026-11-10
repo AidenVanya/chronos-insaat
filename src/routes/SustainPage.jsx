@@ -2,9 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Reveal, MaskLines } from '../components/animations.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { Icon } from '../components/Icon.jsx';
-import { TECH_FEATURES } from '../data.js';
+import { useSiteData } from '../context/SiteContext.jsx';
 
 export function SustainPage() {
+  const { site } = useSiteData();
+  const techFeatures = site.techFeatures || [];
+  const materials = site.materials || [];
+
   return (
     <main>
       <PageHeader num="05" eyebrow="Sürdürülebilirlik & Teknoloji"
@@ -16,8 +20,8 @@ export function SustainPage() {
       <section style={{ padding: '24px 0 80px' }}>
         <div className="container">
           <div className="bordered-grid-4">
-            {TECH_FEATURES.map((f, i) => (
-              <Reveal key={f.title} delay={i * 120}>
+            {techFeatures.map((f, i) => (
+              <Reveal key={f.id || f.title} delay={i * 120}>
                 <div className="bordered-cell">
                   <div style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(36px, 4.2vw, 60px)', color: 'var(--accent)', letterSpacing: '-0.03em', lineHeight: 0.95, marginBottom: 20 }}>{f.kpi}</div>
                   <h3 style={{ fontSize: 22, marginBottom: 12 }}>{f.title}</h3>
@@ -67,13 +71,8 @@ export function SustainPage() {
             </h2>
           </Reveal>
           <div className="grid-4">
-            {[
-              { ico: 'leaf',    t: 'Düşük Karbonlu Çimento',      s: 'CEM III/B sınıfı, %60 daha az CO₂',          pct: 62 },
-              { ico: 'recycle', t: 'Geri Dönüştürülmüş Agrega',   s: 'İnşaat moloz atığından %35',                 pct: 35 },
-              { ico: 'solar',   t: 'Çatı + Cephe PV',             s: 'Yıllık tüketimin %48\'i',                    pct: 48 },
-              { ico: 'sensor',  t: 'IoT Sensör Ağı',              s: 'Tüm yeni binalarda BMS entegrasyonu',        pct: 100 },
-            ].map((m, i) => (
-              <Reveal key={m.t} delay={i * 100} style={{ height: '100%' }}>
+            {materials.map((m, i) => (
+              <Reveal key={m.id || m.t} delay={i * 100} style={{ height: '100%' }}>
                 <article className="surface" style={{ padding: 28, display: 'flex', flexDirection: 'column', gap: 16, height: '100%' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                     <div className="ico" style={{ width: 48, height: 48, borderRadius: 12, border: '1px solid var(--line)', display: 'grid', placeItems: 'center', color: 'var(--accent)', flexShrink: 0 }}>

@@ -2,13 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { Reveal, MaskLines } from '../components/animations.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { Icon } from '../components/Icon.jsx';
-import { POSITIONS } from '../data.js';
+import { useSiteData } from '../context/SiteContext.jsx';
 
 export function CareersPage() {
+  const { site } = useSiteData();
+  const positions = site.positions || [];
+
   const [teamFilter, setTeamFilter] = useState('all');
   const [selected, setSelected] = useState(null);
-  const teams = useMemo(() => ['all', ...Array.from(new Set(POSITIONS.map(p => p.team)))], []);
-  const list = teamFilter === 'all' ? POSITIONS : POSITIONS.filter(p => p.team === teamFilter);
+  const teams = useMemo(() => ['all', ...Array.from(new Set(positions.map(p => p.team)))], [positions]);
+  const list = teamFilter === 'all' ? positions : positions.filter(p => p.team === teamFilter);
 
   const handleSelectPosition = (p) => {
     setSelected({ ...p });
@@ -73,7 +76,7 @@ export function CareersPage() {
           </div>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, borderTop: '1px solid var(--line)' }}>
             {list.map((p, i) => (
-              <li key={`${p.team}-${p.title}`}>
+              <li key={p.id || `${p.team}-${p.title}-${i}`}>
                 <Reveal delay={Math.min(i * 60, 480)}>
                   <button
                     type="button"
@@ -121,9 +124,10 @@ export function CareersPage() {
 }
 
 function ApplicationForm({ preset }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', team: '', portfolio: '', message: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', team: '', portfolio: '', message: '', website_hp: '' });
   const [errors, setErrors] = useState({});
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (preset) {
@@ -134,14 +138,25 @@ function ApplicationForm({ preset }) {
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: null })); };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const errs = {};
     if (!form.name) errs.name = 'Ad ve soyad gerekli';
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) errs.email = 'Geçerli bir e-posta girin';
     if (!form.message) errs.message = 'Lütfen birkaç cümle yazın';
     setErrors(errs);
-    if (Object.keys(errs).length === 0) setSent(true);
+    if (Object.keys(errs).length > 0) return;
+
+    setSubmitting(true);
+    try {
+      await fetch('/api/careers/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+    } catch {}
+    setSubmitting(false);
+    setSent(true);
   };
 
   if (sent) {
@@ -152,7 +167,7 @@ function ApplicationForm({ preset }) {
             <Icon name="check" size={26} />
           </div>
           <h3 style={{ fontSize: 32 }}>Başvurunuz alındı.</h3>
-          <p style={{ color: 'var(--text-dim)', maxWidth: 380 }}>Ekibimiz 14 gün içinde size dönecektir. Sabrınız için teşekkürler.</p>
+          <p style={{ color: 'var(--text-dim)', maxWidth: 380 }}>Başvurunuz yönetim paneline kaydedildi. Ekibimiz 14 gün içinde size dönecektir.</p>
         </div>
       </Reveal>
     );
@@ -160,6 +175,16 @@ function ApplicationForm({ preset }) {
 
   return (
     <form onSubmit={submit} className="form-grid">
+      {/* Honeypot anti-bot field */}
+      <input
+        type="text"
+        name="website_hp"
+        value={form.website_hp}
+        onChange={(e) => set('website_hp', e.target.value)}
+        style={{ display: 'none' }}
+        tabIndex={-1}
+        autoComplete="off"
+      />
       <div className={`field field-full ${errors.name ? 'error' : ''}`}>
         <label>Ad Soyad</label>
         <input className="input" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Mehmet Doğan" />
@@ -189,7 +214,10 @@ function ApplicationForm({ preset }) {
       </div>
       <div className="field-full" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginTop: 8 }}>
         <span className="label-mono" style={{ color: 'var(--text-faint)' }}>* Bilgileriniz KVKK kapsamında saklanır.</span>
-        <button className="btn btn-primary" type="submit">Başvuruyu gönder<span className="btn-arrow">→</span></button>
+        <button className="btn btn-primary" type="submit" disabled={submitting}>
+          {submitting ? 'Gönderiliyor...' : 'Başvuruyu gönder'}
+          <span className="btn-arrow">→</span>
+        </button>
       </div>
     </form>
   );

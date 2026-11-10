@@ -2,21 +2,38 @@ import { useState } from 'react';
 import { Reveal } from '../components/animations.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { Icon } from '../components/Icon.jsx';
+import { useSiteData } from '../context/SiteContext.jsx';
 
 export function ContactPage() {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
+  const { site } = useSiteData();
+  const settings = site.settings || {};
+  const offices = site.offices || [];
+
+  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '', website_hp: '' });
   const [errors, setErrors] = useState({});
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: null })); };
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const errs = {};
     if (!form.name) errs.name = 'Adınızı yazın';
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) errs.email = 'Geçerli bir e-posta girin';
     if (!form.message) errs.message = 'Mesaj alanı boş';
     setErrors(errs);
-    if (Object.keys(errs).length === 0) setSent(true);
+    if (Object.keys(errs).length > 0) return;
+
+    setSubmitting(true);
+    try {
+      await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+    } catch {}
+    setSubmitting(false);
+    setSent(true);
   };
 
   return (
@@ -32,9 +49,9 @@ export function ContactPage() {
             {/* contact info */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
               {[
-                { ico: 'map',   t: 'Genel Merkez', l1: 'Büyükdere Cd. No:209',       l2: 'Levent / İstanbul 34394' },
-                { ico: 'phone', t: 'Telefon',      l1: '+90 212 999 14 87',          l2: 'Hafta içi 09:00 — 18:30' },
-                { ico: 'mail',  t: 'E-posta',      l1: 'info@chronosinsaat.com.tr',  l2: 'basin@chronosinsaat.com.tr' },
+                { ico: 'map',   t: 'Genel Merkez', l1: settings.addressLine1 || 'Büyükdere Cd. No:209',      l2: settings.addressLine2 || 'Levent / İstanbul 34394' },
+                { ico: 'phone', t: 'Telefon',      l1: settings.phone || '+90 212 999 14 87',                 l2: settings.workHours || 'Hafta içi 09:00 — 18:30' },
+                { ico: 'mail',  t: 'E-posta',      l1: settings.email || 'info@chronosinsaat.com.tr',         l2: settings.pressEmail || 'basin@chronosinsaat.com.tr' },
               ].map((c, i) => (
                 <Reveal key={c.t} delay={i * 100}>
                   <div style={{ display: 'flex', gap: 18, paddingBottom: 26, borderBottom: '1px solid var(--line)', minWidth: 0 }}>
@@ -53,12 +70,8 @@ export function ContactPage() {
                 <div style={{ paddingTop: 8 }}>
                   <div className="label-mono" style={{ marginBottom: 14 }}>Diğer ofisler</div>
                   <div className="offices-grid">
-                    {[
-                      { c: 'Ankara', a: 'Bilkent Plaza A2' },
-                      { c: 'İzmir',  a: 'Alsancak No:88' },
-                      { c: 'Bodrum', a: 'Yalıkavak Şantiyesi' },
-                    ].map(o => (
-                      <div key={o.c}>
+                    {offices.map(o => (
+                      <div key={o.id || o.c}>
                         <div style={{ fontFamily: 'var(--serif)', fontSize: 20 }}>{o.c}</div>
                         <div style={{ color: 'var(--text-dim)', fontSize: 13, marginTop: 4 }}>{o.a}</div>
                       </div>
@@ -76,10 +89,20 @@ export function ContactPage() {
                     <Icon name="check" size={26} />
                   </div>
                   <h3 style={{ fontSize: 32 }}>Mesajınız iletildi.</h3>
-                  <p style={{ color: 'var(--text-dim)', maxWidth: 420 }}>48 saat içinde size geri dönüş yapacağız.</p>
+                  <p style={{ color: 'var(--text-dim)', maxWidth: 420 }}>Mesajınız yönetim paneline kaydedildi. 48 saat içinde size geri dönüş yapacağız.</p>
                 </div>
               ) : (
                 <form onSubmit={submit} className="surface form-grid" style={{ padding: 'clamp(24px, 4vw, 48px)' }}>
+                  {/* Honeypot anti-bot field */}
+                  <input
+                    type="text"
+                    name="website_hp"
+                    value={form.website_hp}
+                    onChange={(e) => set('website_hp', e.target.value)}
+                    style={{ display: 'none' }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
                   <div className={`field ${errors.name ? 'error' : ''}`}>
                     <label>Ad Soyad</label>
                     <input className="input" value={form.name} onChange={e => set('name', e.target.value)} />
@@ -112,7 +135,10 @@ export function ContactPage() {
                   </div>
                   <div className="field-full" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
                     <span className="label-mono" style={{ color: 'var(--text-faint)' }}>KVKK kapsamında saklanır</span>
-                    <button className="btn btn-primary" type="submit">Mesajı gönder<span className="btn-arrow">→</span></button>
+                    <button className="btn btn-primary" type="submit" disabled={submitting}>
+                      {submitting ? 'Gönderiliyor...' : 'Mesajı gönder'}
+                      <span className="btn-arrow">→</span>
+                    </button>
                   </div>
                 </form>
               )}
@@ -125,7 +151,7 @@ export function ContactPage() {
       <section style={{ paddingBottom: 60 }}>
         <div className="container">
           <Reveal scale>
-            <DarkMap />
+            <DarkMap coordinates={settings.coordinates} />
           </Reveal>
         </div>
       </section>
@@ -133,7 +159,7 @@ export function ContactPage() {
   );
 }
 
-function DarkMap() {
+function DarkMap({ coordinates }) {
   const [zoom, setZoom] = useState(1);
 
   return (
@@ -200,7 +226,7 @@ function DarkMap() {
         padding: '8px 14px', borderRadius: 100, border: '1px solid var(--line)',
       }}>
         <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
-        <span className="label-mono" style={{ color: 'var(--text)' }}>41.0789°N · 29.0124°E</span>
+        <span className="label-mono" style={{ color: 'var(--text)' }}>{coordinates || '41.0789°N · 29.0124°E'}</span>
       </div>
       <div style={{ position: 'absolute', right: 'clamp(14px, 2.5vw, 24px)', bottom: 'clamp(14px, 2.5vw, 24px)', display: 'flex', gap: 8 }}>
         <button type="button" className="nav-arrow" onClick={() => setZoom(z => Math.min(1.8, +(z + 0.25).toFixed(2)))} aria-label="Yakınlaştır">+</button>

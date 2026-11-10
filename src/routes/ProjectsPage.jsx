@@ -2,9 +2,12 @@ import { useMemo, useState } from 'react';
 import { Reveal } from '../components/animations.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { ProjectCard } from '../components/ProjectCard.jsx';
-import { PROJECTS } from '../data.js';
+import { useSiteData } from '../context/SiteContext.jsx';
 
 export function ProjectsPage() {
+  const { site } = useSiteData();
+  const projects = site.projects || [];
+
   const [filter, setFilter] = useState('all');
   const filters = [
     { id: 'all',          label: 'Tümü' },
@@ -15,14 +18,14 @@ export function ProjectsPage() {
     { id: 'donusum',      label: 'Kentsel Dönüşüm' },
   ];
   const list = useMemo(() => {
-    if (filter === 'all') return PROJECTS;
-    return PROJECTS.filter(p => p.status === filter || p.type === filter);
-  }, [filter]);
+    if (filter === 'all') return projects;
+    return projects.filter(p => p.status === filter || p.type === filter);
+  }, [filter, projects]);
 
   return (
     <main>
       <PageHeader num="03" eyebrow="Projeler"
-        title={["10 proje, dört şehir,", "ortak bir disiplin."]}
+        title={[`${projects.length} proje, dört şehir,`, "ortak bir disiplin."]}
         intro="142 tamamlanmış ve 28 devam eden projeden bir seçki. Filtrelerle bölge, tip veya statüye göre keşfedin." />
 
       <section style={{ padding: '24px 0 40px' }}>

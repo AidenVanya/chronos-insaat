@@ -1,23 +1,29 @@
 import { Reveal, MaskLines } from '../components/animations.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { Parallax } from '../components/Parallax.jsx';
-import { IMG, TIMELINE } from '../data.js';
+import { useSiteData } from '../context/SiteContext.jsx';
+import { IMG } from '../data.js';
 
 export function AboutPage() {
+  const { site } = useSiteData();
+  const settings = site.settings || {};
+  const timeline = site.timeline || [];
+  const leadership = site.leadership || [];
+
   return (
     <main>
       <PageHeader
         num="02"
         eyebrow="Hakkımızda"
-        title={["1987'den bu yana", "aynı disiplinle."]}
-        intro="Mehmet Doğan'ın beş kişilik bir mimari ofis olarak Ankara'da kurduğu Chronos, bugün 380 kişilik bir ekibe sahip — ama söz verdiğimiz tarihi tutma disiplinimizi ilk günden bu yana değiştirmedik."
+        title={settings.aboutTitle?.length ? settings.aboutTitle : ["1987'den bu yana", "aynı disiplinle."]}
+        intro={settings.aboutIntro}
       />
 
       {/* big atmospheric image */}
       <section style={{ paddingTop: 24 }}>
         <div className="container">
           <Reveal scale>
-            <Parallax src={IMG('1486325212027-8081e485255e', 2000)} height="clamp(320px, 60vh, 640px)" style={{ borderRadius: 18 }}>
+            <Parallax src={settings.aboutHeroImg || IMG('1486325212027-8081e485255e', 2000)} height="clamp(320px, 60vh, 640px)" style={{ borderRadius: 18 }}>
               <div style={{
                 position: 'absolute',
                 left: 'clamp(16px, 3vw, 28px)',
@@ -29,7 +35,7 @@ export function AboutPage() {
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
               }}>
-                Karaköy Loft No.7 / Restorasyon kazısı, 2022
+                {settings.aboutHeroCaption || 'Karaköy Loft No.7 / Restorasyon kazısı, 2022'}
               </div>
             </Parallax>
           </Reveal>
@@ -41,9 +47,9 @@ export function AboutPage() {
         <div className="container">
           <div className="grid-3-wide">
             {[
-              { tag: 'Vizyon', t: 'Yarının şehirlerinde de iz bırakan, kalıcı yapılar inşa etmek.' },
-              { tag: 'Misyon', t: 'Estetik, mühendislik ve zaman disiplinini uzlaşmaz biçimde bir araya getirmek.' },
-              { tag: 'Söz', t: '38 yıllık tarihimiz boyunca tek bir teslim tarihi kaçırmadık.' },
+              { tag: 'Vizyon', t: settings.visionText || 'Yarının şehirlerinde de iz bırakan, kalıcı yapılar inşa etmek.' },
+              { tag: 'Misyon', t: settings.missionText || 'Estetik, mühendislik ve zaman disiplinini uzlaşmaz biçimde bir araya getirmek.' },
+              { tag: 'Söz',    t: settings.promiseText || '38 yıllık tarihimiz boyunca tek bir teslim tarihi kaçırmadık.' },
             ].map((v, i) => (
               <Reveal key={v.tag} delay={i * 150}>
                 <div style={{ borderTop: '1px solid var(--line)', paddingTop: 28 }}>
@@ -57,7 +63,7 @@ export function AboutPage() {
       </section>
 
       {/* timeline */}
-      <Timeline />
+      <Timeline timeline={timeline} />
 
       {/* leadership tease */}
       <section className="section" style={{ background: 'var(--bg-soft)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
@@ -71,17 +77,12 @@ export function AboutPage() {
             </h2>
           </Reveal>
           <div className="grid-4" style={{ marginTop: 56 }}>
-            {[
-              { n: 'Mehmet Doğan',    r: 'Kurucu / Yönetim Kurulu Başkanı', img: '1568602471122-7832951cc4c5' },
-              { n: 'Defne Aksu',      r: 'CEO',                             img: '1494790108377-be9c29b29330' },
-              { n: 'Tolga Yıldırım',  r: 'Tasarım Direktörü',               img: '1500648767791-00dcc994a43e' },
-              { n: 'Selin Erkan',     r: 'Sürdürülebilirlik Direktörü',     img: '1573496359142-b8d87734a5a2' },
-            ].map((p, i) => (
-              <Reveal key={p.n} delay={i * 100}>
+            {leadership.map((p, i) => (
+              <Reveal key={p.id || p.n} delay={i * 100}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{
                     aspectRatio: '4/5',
-                    backgroundImage: `url(${IMG(p.img, 900)})`,
+                    backgroundImage: `url(${p.img})`,
                     backgroundPosition: 'center 20%',
                     backgroundSize: 'cover',
                     borderRadius: 10,
@@ -100,7 +101,7 @@ export function AboutPage() {
   );
 }
 
-function Timeline() {
+function Timeline({ timeline }) {
   return (
     <section className="section">
       <div className="container">
@@ -110,8 +111,8 @@ function Timeline() {
         <div className="timeline-wrap">
           <div className="timeline-line" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(44px, 6vw, 64px)' }}>
-            {TIMELINE.map((e, i) => (
-              <Reveal key={e.year} delay={i * 120}>
+            {timeline.map((e, i) => (
+              <Reveal key={e.id || e.year} delay={i * 120}>
                 <div className="timeline-row">
                   <div className="timeline-year">{e.year}</div>
                   <div className="timeline-body">

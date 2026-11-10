@@ -1,10 +1,18 @@
 import { useRouter } from './Router.jsx';
+import { useSiteData } from '../context/SiteContext.jsx';
 
 export function ProjectCard({ p, large }) {
   const { go } = useRouter();
-  const statusLabel = { 'tamamlanan': 'Tamamlandı', 'devam-eden': 'Devam ediyor' }[p.status];
+  const { trackVisit } = useSiteData();
+  const statusLabel = { 'tamamlanan': 'Tamamlandı', 'devam-eden': 'Devam ediyor' }[p.status] || 'Tamamlandı';
+
+  const handleClick = () => {
+    trackVisit({ projectId: p.id });
+    go('/projeler');
+  };
+
   return (
-    <div className={`proj-card ${large ? 'large' : ''}`} onClick={() => go('/projeler')}>
+    <div className={`proj-card ${large ? 'large' : ''}`} onClick={handleClick}>
       <div className="proj-img" style={{ backgroundImage: `url(${p.img})` }} />
       <div className="proj-overlay" />
       <div className="proj-tags">
