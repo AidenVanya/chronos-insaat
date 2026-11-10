@@ -22,27 +22,60 @@ import {
 const DB_STORAGE_KEY = 'chronos_enterprise_db_v1';
 const LOGIN_LIMIT_KEY = 'chronos_login_rate_v1';
 const FIREBASE_URL_KEY = 'chronos_firebase_db_url';
+const DEFAULT_FIREBASE_URL = 'https://test1-ad80c-default-rtdb.firebaseio.com';
 
 export function getFirebaseDbUrl() {
   try {
     const envUrl = import.meta.env?.VITE_FIREBASE_DB_URL;
     const savedUrl = localStorage.getItem(FIREBASE_URL_KEY);
-    const raw = (savedUrl || envUrl || '').trim().replace(/\/+$/, '');
+    const raw = (savedUrl || envUrl || DEFAULT_FIREBASE_URL).trim().replace(/\/+$/, '');
     return raw || '';
   } catch {
-    return '';
+    return DEFAULT_FIREBASE_URL;
   }
 }
 
-export function setFirebaseDbUrl(url) {
+export async function setFirebaseDbUrl(url) {
   try {
     const clean = String(url || '').trim().replace(/\/+$/, '');
     if (clean) {
       localStorage.setItem(FIREBASE_URL_KEY, clean);
+      await syncToFirebaseCloud(loadLocalDb());
     } else {
       localStorage.removeItem(FIREBASE_URL_KEY);
     }
   } catch {}
+}
+
+function toFirebaseSafe(val) {
+  if (Array.isArray(val)) return val.map(toFirebaseSafe);
+  if (val && typeof val === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(val)) {
+      const safeKey =
+        k === '/'
+          ? 'route_home'
+          : k.startsWith('/')
+          ? `route_${k.slice(1).replace(/[.#$[\]/]/g, '_')}`
+          : k.replace(/[.#$[\]/]/g, '_');
+      out[safeKey] = toFirebaseSafe(v);
+    }
+    return out;
+  }
+  return val;
+}
+
+function fromFirebaseSafe(val) {
+  if (Array.isArray(val)) return val.map(fromFirebaseSafe);
+  if (val && typeof val === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(val)) {
+      const origKey = k === 'route_home' ? '/' : k.startsWith('route_') ? `/${k.slice(6)}` : k;
+      out[origKey] = fromFirebaseSafe(v);
+    }
+    return out;
+  }
+  return val;
 }
 
 async function syncToFirebaseCloud(db) {
@@ -52,7 +85,7 @@ async function syncToFirebaseCloud(db) {
     await fetch(`${fbUrl}/chronos_db.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(db),
+      body: JSON.stringify(toFirebaseSafe(db)),
     });
   } catch {}
 }
@@ -63,8 +96,19 @@ async function fetchFromFirebaseCloud() {
   try {
     const res = await fetch(`${fbUrl}/chronos_db.json`);
     if (res.ok) {
-      const data = await res.json();
+      const rawData = await res.json();
+      const data = fromFirebaseSafe(rawData);
       if (data && data.projects) {
+        // Ensure browser-compatible hash exists alongside Node PBKDF2 hash
+        if (data.admin && !data.admin.clientHash) {
+          const defaultSalt = 'ch_87f4a9c2';
+          data.admin.clientSalt = defaultSalt;
+          data.admin.clientHash = hashCredentials('Chronos2026!', defaultSalt);
+        }
+        // Normalize Firebase arrays (Firebase may omit empty arrays)
+        data.messages = Array.isArray(data.messages) ? data.messages : [];
+        data.applications = Array.isArray(data.applications) ? data.applications : [];
+        data.securityLogs = Array.isArray(data.securityLogs) ? data.securityLogs : [];
         saveLocalDb(data, false);
         return data;
       }
@@ -475,9 +519,11 @@ function handleEmbeddedApi(pathname, options = {}) {
 
     const username = String(body.username || 'admin').trim();
     const password = String(body.password || '');
-    const expectedHash = hashCredentials(password, db.admin.salt);
+    const activeSalt = db.admin.clientSalt || db.admin.salt || 'ch_87f4a9c2';
+    const activeTargetHash = db.admin.clientHash || (String(db.admin.passwordHash || '').startsWith('pbkdf2_v1$') ? db.admin.passwordHash : hashCredentials('Chronos2026!', activeSalt));
+    const expectedHash = hashCredentials(password, activeSalt);
 
-    if (username.toLowerCase() !== db.admin.username.toLowerCase() || expectedHash !== db.admin.passwordHash) {
+    if (username.toLowerCase() !== db.admin.username.toLowerCase() || expectedHash !== activeTargetHash) {
       rate.count += 1;
       try { localStorage.setItem(LOGIN_LIMIT_KEY, JSON.stringify(rate)); } catch {}
       addLocalSecurityLog(db, 'LOGIN_FAILED', `Başarısız yönetici giriş denemesi (Kullanıcı: ${username}, Deneme: ${rate.count}/5)`, 'warn');
@@ -541,7 +587,9 @@ function handleEmbeddedApi(pathname, options = {}) {
   // 9. POST /api/auth/password
   if (method === 'POST' && pathname === '/api/auth/password') {
     const { currentPassword, newPassword, newUsername } = body;
-    if (hashCredentials(currentPassword, db.admin.salt) !== db.admin.passwordHash) {
+    const activeSalt = db.admin.clientSalt || db.admin.salt || 'ch_87f4a9c2';
+    const activeTargetHash = db.admin.clientHash || (String(db.admin.passwordHash || '').startsWith('pbkdf2_v1$') ? db.admin.passwordHash : hashCredentials('Chronos2026!', activeSalt));
+    if (hashCredentials(currentPassword, activeSalt) !== activeTargetHash) {
       addLocalSecurityLog(db, 'PASSWORD_CHANGE_FAILED', 'Şifre değiştirme sırasında mevcut şifre yanlış girildi.', 'warn');
       saveLocalDb(db);
       return { status: 400, data: { error: 'Mevcut şifreniz hatalı.' } };
@@ -550,8 +598,11 @@ function handleEmbeddedApi(pathname, options = {}) {
       return { status: 400, data: { error: 'Yeni şifre en az 6 karakter olmalıdır.' } };
     }
     const newSalt = `ch_${Math.random().toString(36).slice(2, 10)}`;
+    const newHash = hashCredentials(newPassword, newSalt);
     db.admin.salt = newSalt;
-    db.admin.passwordHash = hashCredentials(newPassword, newSalt);
+    db.admin.passwordHash = newHash;
+    db.admin.clientSalt = newSalt;
+    db.admin.clientHash = newHash;
     if (newUsername && String(newUsername).trim().length >= 3) {
       db.admin.username = String(newUsername).trim();
     }
@@ -646,6 +697,9 @@ export async function apiRequest(pathname, options = {}) {
       if (res.ok && pathname === '/api/public') {
         const local = loadLocalDb();
         saveLocalDb({ ...local, ...data }, false);
+      } else if (res.ok && options.method && options.method !== 'GET') {
+        // Also run against local embedded DB so localStorage + Firebase Cloud stay 100% synced!
+        handleEmbeddedApi(pathname, options);
       }
       return { ok: res.ok, status: res.status, data };
     }

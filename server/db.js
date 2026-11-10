@@ -7,6 +7,38 @@ import { hashPassword } from './security.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'db.json');
+const DEFAULT_FIREBASE_DB_URL = process.env.VITE_FIREBASE_DB_URL || 'https://test1-ad80c-default-rtdb.firebaseio.com';
+
+export function toFirebaseSafe(val) {
+  if (Array.isArray(val)) return val.map(toFirebaseSafe);
+  if (val && typeof val === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(val)) {
+      const safeKey =
+        k === '/'
+          ? 'route_home'
+          : k.startsWith('/')
+          ? `route_${k.slice(1).replace(/[.#$[\]/]/g, '_')}`
+          : k.replace(/[.#$[\]/]/g, '_');
+      out[safeKey] = toFirebaseSafe(v);
+    }
+    return out;
+  }
+  return val;
+}
+
+async function syncNodeDbToFirebase(data) {
+  if (!DEFAULT_FIREBASE_DB_URL) return;
+  try {
+    await fetch(`${DEFAULT_FIREBASE_DB_URL.replace(/\/+$/, '')}/chronos_db.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(toFirebaseSafe(data)),
+    });
+  } catch (err) {
+    console.error('[Chronos Firebase Sync] Hata:', err.message);
+  }
+}
 
 const IMG = (id, w = 1600) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
 
@@ -330,6 +362,7 @@ export function saveDb(nextDb = dbCache) {
   } catch (err) {
     console.error('[Chronos DB] Yazma hatası:', err.message);
   }
+  syncNodeDbToFirebase(dbCache);
 }
 
 export function resetDbToDefault() {

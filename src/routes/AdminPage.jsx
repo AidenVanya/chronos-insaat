@@ -143,6 +143,11 @@ export function AdminPage() {
                 <span className="tag" style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}>
                   <span className="dot"></span>Güvenli Oturum ({dashboard.adminUser?.username || 'admin'})
                 </span>
+                {getFirebaseDbUrl() && (
+                  <span className="tag" style={{ borderColor: '#3ddc84', color: '#3ddc84' }}>
+                    <span className="dot" style={{ background: '#3ddc84' }}></span>Firebase Cloud Aktif
+                  </span>
+                )}
               </div>
               <div className="label-mono" style={{ marginTop: 4 }}>
                 PBKDF2-SHA512 · Canlı İçerik & Analitik Kontrol Paneli
