@@ -3,6 +3,7 @@ import { useSiteData } from '../context/SiteContext.jsx';
 import { useRouter } from '../components/Router.jsx';
 import { BrandMark } from '../components/BrandMark.jsx';
 import { Icon } from '../components/Icon.jsx';
+import { apiRequest } from '../services/apiClient.js';
 
 const TOKEN_KEY = 'chronos_admin_token';
 
@@ -40,27 +41,21 @@ export function AdminPage() {
       setAuthChecking(false);
       return;
     }
-    try {
-      const res = await fetch('/api/admin/dashboard', {
-        headers: { Authorization: `Bearer ${activeToken}` },
-      });
-      if (res.status === 401) {
-        localStorage.removeItem(TOKEN_KEY);
-        setToken('');
-        setDashboard(null);
-        setAuthChecking(false);
-        return;
-      }
-      if (res.ok) {
-        const data = await res.json();
-        setDashboard(data);
-      }
-    } catch {
-      showToast('Sunucu bağlantısı kurulamadı.', 'error');
-    } finally {
+    const res = await apiRequest('/api/admin/dashboard', {
+      headers: { Authorization: `Bearer ${activeToken}` },
+    });
+    if (res.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      setToken('');
+      setDashboard(null);
       setAuthChecking(false);
+      return;
     }
-  }, [token, showToast]);
+    if (res.ok && res.data) {
+      setDashboard(res.data);
+    }
+    setAuthChecking(false);
+  }, [token]);
 
   useEffect(() => {
     if (token) {
@@ -69,12 +64,10 @@ export function AdminPage() {
   }, [token, fetchDashboard]);
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch {}
+    await apiRequest('/api/auth/logout', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
     localStorage.removeItem(TOKEN_KEY);
     setToken('');
     setDashboard(null);
@@ -83,7 +76,7 @@ export function AdminPage() {
   const saveSection = async (section, data, successMsg = 'Değişiklikler kaydedildi ve sitede yayına alındı.') => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/content/${section}`, {
+      const res = await apiRequest(`/api/admin/content/${section}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +84,7 @@ export function AdminPage() {
         },
         body: JSON.stringify({ data }),
       });
-      const json = await res.json();
+      const json = res.data || {};
       if (!res.ok) {
         showToast(json.error || 'Kaydetme hatası oluştu.', 'error');
         return false;
@@ -101,9 +94,6 @@ export function AdminPage() {
       await refreshPublicData();
       showToast(successMsg, 'success');
       return true;
-    } catch {
-      showToast('Sunucuya bağlanılamadı.', 'error');
-      return false;
     } finally {
       setSaving(false);
     }
@@ -300,23 +290,18 @@ function AdminLogin({ onSuccess, onBack }) {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Giriş başarısız.');
-      } else if (data.token) {
-        onSuccess(data.token);
-      }
-    } catch {
-      setError('Sunucu ile bağlantı kurulamadı.');
-    } finally {
-      setLoading(false);
+    const res = await apiRequest('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = res.data || {};
+    if (!res.ok) {
+      setError(data.error || 'Giriş başarısız.');
+    } else if (data.token) {
+      onSuccess(data.token);
     }
+    setLoading(false);
   };
 
   return (
@@ -1404,26 +1389,24 @@ function CareersAdminTab({ dashboard, token, saving, onSaveSection, onUpdateAppl
   useEffect(() => { setPositions(dashboard.positions || []); }, [dashboard.positions]);
 
   const updateAppStatus = async (id, status) => {
-    const res = await fetch(`/api/admin/applications/${id}`, {
+    const res = await apiRequest(`/api/admin/applications/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ status }),
     });
-    if (res.ok) {
-      const data = await res.json();
-      onUpdateApplications(data.applications);
+    if (res.ok && res.data) {
+      onUpdateApplications(res.data.applications);
       showToast('Başvuru durumu güncellendi.');
     }
   };
 
   const deleteApp = async (id) => {
-    const res = await fetch(`/api/admin/applications/${id}`, {
+    const res = await apiRequest(`/api/admin/applications/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (res.ok) {
-      const data = await res.json();
-      onUpdateApplications(data.applications);
+    if (res.ok && res.data) {
+      onUpdateApplications(res.data.applications);
       showToast('Başvuru silindi.');
     }
   };
@@ -1548,26 +1531,24 @@ function CareersAdminTab({ dashboard, token, saving, onSaveSection, onUpdateAppl
    ────────────────────────────────────────────────────────────────────────── */
 function MessagesAdminTab({ messages, token, onUpdateMessages, showToast }) {
   const updateStatus = async (id, status) => {
-    const res = await fetch(`/api/admin/messages/${id}`, {
+    const res = await apiRequest(`/api/admin/messages/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ status }),
     });
-    if (res.ok) {
-      const data = await res.json();
-      onUpdateMessages(data.messages);
+    if (res.ok && res.data) {
+      onUpdateMessages(res.data.messages);
       showToast('Mesaj durumu güncellendi.');
     }
   };
 
   const deleteMsg = async (id) => {
-    const res = await fetch(`/api/admin/messages/${id}`, {
+    const res = await apiRequest(`/api/admin/messages/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (res.ok) {
-      const data = await res.json();
-      onUpdateMessages(data.messages);
+    if (res.ok && res.data) {
+      onUpdateMessages(res.data.messages);
       showToast('Mesaj silindi.');
     }
   };
@@ -1640,13 +1621,12 @@ function SettingsAdminTab({ dashboard, token, saving, onSaveSection, onResetSucc
 
   const handleFactoryReset = async () => {
     if (!window.confirm('Tüm site metinlerini ve projeleri varsayılan fabrika ayarlarına döndürmek istediğinize emin misiniz?')) return;
-    const res = await fetch('/api/admin/reset', {
+    const res = await apiRequest('/api/admin/reset', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (res.ok) {
-      const data = await res.json();
-      onResetSuccess(data);
+    if (res.ok && res.data) {
+      onResetSuccess(res.data);
     } else {
       showToast('Sıfırlama işlemi başarısız oldu.', 'error');
     }
@@ -1806,36 +1786,30 @@ function SecurityAdminTab({ dashboard, token, showToast, onLogsUpdated, onUserUp
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     setChanging(true);
-    try {
-      const res = await fetch('/api/auth/password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ currentPassword, newPassword, newUsername }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast(data.error || 'Şifre güncellenemedi.', 'error');
-      } else {
-        setCurrentPassword('');
-        setNewPassword('');
-        onUserUpdated(data.username);
-        showToast('Yönetici kullanıcı adı ve şifresi güvenle güncellendi.');
-      }
-    } catch {
-      showToast('Sunucu hatası.', 'error');
-    } finally {
-      setChanging(false);
+    const res = await apiRequest('/api/auth/password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ currentPassword, newPassword, newUsername }),
+    });
+    const data = res.data || {};
+    if (!res.ok) {
+      showToast(data.error || 'Şifre güncellenemedi.', 'error');
+    } else {
+      setCurrentPassword('');
+      setNewPassword('');
+      onUserUpdated(data.username);
+      showToast('Yönetici kullanıcı adı ve şifresi güvenle güncellendi.');
     }
+    setChanging(false);
   };
 
   const clearLogs = async () => {
-    const res = await fetch('/api/admin/security-logs', {
+    const res = await apiRequest('/api/admin/security-logs', {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (res.ok) {
-      const data = await res.json();
-      onLogsUpdated(data.securityLogs);
+    if (res.ok && res.data) {
+      onLogsUpdated(res.data.securityLogs);
       showToast('Güvenlik kayıtları temizlendi.');
     }
   };

@@ -3,6 +3,7 @@ import { Reveal, MaskLines } from '../components/animations.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { Icon } from '../components/Icon.jsx';
 import { useSiteData } from '../context/SiteContext.jsx';
+import { apiRequest } from '../services/apiClient.js';
 
 export function CareersPage() {
   const { site } = useSiteData();
@@ -148,13 +149,11 @@ function ApplicationForm({ preset }) {
     if (Object.keys(errs).length > 0) return;
 
     setSubmitting(true);
-    try {
-      await fetch('/api/careers/apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-    } catch {}
+    await apiRequest('/api/careers/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    });
     setSubmitting(false);
     setSent(true);
   };
