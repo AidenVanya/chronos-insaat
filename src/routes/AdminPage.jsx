@@ -3,7 +3,7 @@ import { useSiteData } from '../context/SiteContext.jsx';
 import { useRouter } from '../components/Router.jsx';
 import { BrandMark } from '../components/BrandMark.jsx';
 import { Icon } from '../components/Icon.jsx';
-import { apiRequest } from '../services/apiClient.js';
+import { apiRequest, getFirebaseDbUrl, setFirebaseDbUrl } from '../services/apiClient.js';
 
 const TOKEN_KEY = 'chronos_admin_token';
 
@@ -1613,11 +1613,17 @@ function MessagesAdminTab({ messages, token, onUpdateMessages, showToast }) {
 function SettingsAdminTab({ dashboard, token, saving, onSaveSection, onResetSuccess, showToast }) {
   const [settings, setSettings] = useState(dashboard.settings || {});
   const [offices, setOffices] = useState(dashboard.offices || []);
+  const [fbUrl, setFbUrl] = useState(() => getFirebaseDbUrl());
 
   useEffect(() => {
     setSettings(dashboard.settings || {});
     setOffices(dashboard.offices || []);
   }, [dashboard]);
+
+  const handleSaveFirebaseUrl = () => {
+    setFirebaseDbUrl(fbUrl);
+    showToast(fbUrl ? 'Firebase Realtime Database bağlantısı kaydedildi ve senkronize edildi.' : 'Firebase bağlantısı kaldırıldı.');
+  };
 
   const handleFactoryReset = async () => {
     if (!window.confirm('Tüm site metinlerini ve projeleri varsayılan fabrika ayarlarına döndürmek istediğinize emin misiniz?')) return;
@@ -1752,6 +1758,31 @@ function SettingsAdminTab({ dashboard, token, saving, onSaveSection, onResetSucc
               />
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Firebase Cloud Sync */}
+      <div className="surface" style={{ padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
+          <div>
+            <div className="label-mono" style={{ color: 'var(--accent)' }}>Bulut Veritabanı Entegrasyonu</div>
+            <h4 style={{ fontSize: 20, marginTop: 4 }}>Firebase Realtime Database Bağlantısı</h4>
+            <p style={{ fontSize: 13.5, color: 'var(--text-dim)', marginTop: 4 }}>
+              Firebase Console &rarr; Realtime Database URL adresinizi buraya yapıştırdığınızda tüm proje, metin, mesaj ve başvuru verileri otomatik olarak Firebase bulutunda saklanır.
+            </p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            className="input"
+            style={{ flex: 1, minWidth: 260 }}
+            value={fbUrl}
+            onChange={(e) => setFbUrl(e.target.value)}
+            placeholder="https://proje-adiniz-default-rtdb.europe-west1.firebasedatabase.app"
+          />
+          <button type="button" className="btn btn-primary" onClick={handleSaveFirebaseUrl}>
+            Firebase URL Kaydet <span className="btn-arrow">✓</span>
+          </button>
         </div>
       </div>
 

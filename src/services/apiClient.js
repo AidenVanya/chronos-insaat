@@ -21,6 +21,61 @@ import {
 
 const DB_STORAGE_KEY = 'chronos_enterprise_db_v1';
 const LOGIN_LIMIT_KEY = 'chronos_login_rate_v1';
+const FIREBASE_URL_KEY = 'chronos_firebase_db_url';
+
+export function getFirebaseDbUrl() {
+  try {
+    const envUrl = import.meta.env?.VITE_FIREBASE_DB_URL;
+    const savedUrl = localStorage.getItem(FIREBASE_URL_KEY);
+    const raw = (savedUrl || envUrl || '').trim().replace(/\/+$/, '');
+    return raw || '';
+  } catch {
+    return '';
+  }
+}
+
+export function setFirebaseDbUrl(url) {
+  try {
+    const clean = String(url || '').trim().replace(/\/+$/, '');
+    if (clean) {
+      localStorage.setItem(FIREBASE_URL_KEY, clean);
+    } else {
+      localStorage.removeItem(FIREBASE_URL_KEY);
+    }
+  } catch {}
+}
+
+async function syncToFirebaseCloud(db) {
+  const fbUrl = getFirebaseDbUrl();
+  if (!fbUrl) return;
+  try {
+    await fetch(`${fbUrl}/chronos_db.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(db),
+    });
+  } catch {}
+}
+
+async function fetchFromFirebaseCloud() {
+  const fbUrl = getFirebaseDbUrl();
+  if (!fbUrl) return null;
+  try {
+    const res = await fetch(`${fbUrl}/chronos_db.json`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.projects) {
+        saveLocalDb(data, false);
+        return data;
+      }
+      // If Firebase DB is empty on first connection, seed it automatically!
+      const seed = loadLocalDb();
+      await syncToFirebaseCloud(seed);
+      return seed;
+    }
+  } catch {}
+  return null;
+}
 
 // ── Security Helpers (XSS Sanitizer, Hashing, Rate Limiting) ─────────────
 const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -266,10 +321,13 @@ function loadLocalDb() {
   return seed;
 }
 
-function saveLocalDb(db) {
+function saveLocalDb(db, pushToCloud = true) {
   try {
     localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
   } catch {}
+  if (pushToCloud) {
+    syncToFirebaseCloud(db);
+  }
 }
 
 function addLocalSecurityLog(db, type, detail, severity = 'info') {
@@ -570,23 +628,35 @@ function handleEmbeddedApi(pathname, options = {}) {
 
 // ── Unified API Fetcher ──────────────────────────────────────────────────
 export async function apiRequest(pathname, options = {}) {
+  // 1. If Firebase Realtime Database URL is configured, sync initial state from Firebase Cloud
+  const fbUrl = getFirebaseDbUrl();
+  if (fbUrl && pathname === '/api/public' && (!options.method || options.method === 'GET')) {
+    const cloudDb = await fetchFromFirebaseCloud();
+    if (cloudDb) {
+      return { ok: true, status: 200, data: getPublicSlice(cloudDb) };
+    }
+  }
+
+  // 2. Try local Node.js backend (/api/*)
   try {
     const res = await fetch(pathname, options);
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
       const data = await res.json();
-      // Mirror server state into local storage so static fallback stays in sync
       if (res.ok && pathname === '/api/public') {
         const local = loadLocalDb();
-        saveLocalDb({ ...local, ...data });
+        saveLocalDb({ ...local, ...data }, false);
       }
       return { ok: res.ok, status: res.status, data };
     }
   } catch {
-    // Network error or server not running -> seamlessly use embedded backend engine
+    // Network error or static hosting (Firebase Hosting / GitHub Pages) -> use embedded + Firebase Cloud engine
   }
 
-  // Fallback to embedded client-side backend engine
+  // 3. Fallback to embedded client-side + Firebase Cloud engine
+  if (fbUrl && pathname === '/api/admin/dashboard') {
+    await fetchFromFirebaseCloud();
+  }
   const fallback = handleEmbeddedApi(pathname, options);
   return {
     ok: fallback.status >= 200 && fallback.status < 300,
